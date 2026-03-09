@@ -141,8 +141,8 @@ with col2:
                 with st.spinner("Converting voice with RVC..."):
                     try:
                         from rvc_infer import run_rvc_conversion
-                        # RVC-models ディレクトリを含むパスを解決
-                        if "RVC-models" in rvc_model_path or os.path.isabs(rvc_model_path):
+                        # 指定されたパスが存在するか、絶対パスの場合はそのまま使用
+                        if os.path.exists(rvc_model_path) or os.path.isabs(rvc_model_path):
                             full_model_path = rvc_model_path
                         else:
                             full_model_path = os.path.join("RVC-models", rvc_model_path)
