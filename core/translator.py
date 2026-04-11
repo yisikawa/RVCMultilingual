@@ -23,6 +23,10 @@ class GeminiTranslator:
     @staticmethod
     def _build_prompt(text: str, target_lang: str, character_setting: str) -> str:
         """翻訳プロンプトを構築する"""
+        dialect_instruction = ""
+        if "Hakata-ben" in target_lang:
+            dialect_instruction = "\n4. 博多弁特有の語尾（〜と、〜ばい、〜ちゃん、〜けん等）や語彙を使い、地元の人のような自然な口調にしてください。"
+
         return f"""以下のテキストを{target_lang}に翻訳してください。
 
 テキスト: {text}
@@ -31,6 +35,6 @@ class GeminiTranslator:
 要件:
 1. 自然な話し言葉であること。
 2. 音声合成（TTS）に適した形式であること。
-3. 設定がある場合は、そのキャラクターらしい口調にすること。
+3. 設定がある場合は、そのキャラクターらしい口調にすること。{dialect_instruction}
 
 出力は翻訳後のテキストのみにしてください。"""

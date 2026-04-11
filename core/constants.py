@@ -1,6 +1,7 @@
 # 対応言語マップ（表示名 → BCP-47コード）
 LANGUAGE_MAP: dict[str, str] = {
     "Japanese": "ja-JP",
+    "Japanese (Hakata-ben)": "ja-JP",
     "English": "en-US",
     "French": "fr-FR",
     "Spanish": "es-ES",
@@ -14,7 +15,7 @@ LANGUAGE_MAP: dict[str, str] = {
 SUPPORTED_LANGUAGES: list[str] = list(LANGUAGE_MAP.keys())
 
 # Geminiモデル名
-GEMINI_MODEL_NAME: str = "gemini-2.0-flash"
+GEMINI_MODEL_NAME: str = "gemini-2.5-flash"
 
 # RVCデフォルト設定
 DEFAULT_PITCH: int = 0
