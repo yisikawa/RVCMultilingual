@@ -1,4 +1,6 @@
-import logging
+﻿import logging
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning, module="google")
 import google.generativeai as genai
 from core.constants import GEMINI_MODEL_NAME
 
@@ -16,7 +18,6 @@ class GeminiTranslator:
     def translate(self, text: str, target_lang: str, character_setting: str = "") -> str:
         """テキストをターゲット言語に翻訳する"""
         prompt = self._build_prompt(text, target_lang, character_setting)
-        logger.info(f"翻訳を実行中... ({target_lang})")
         response = self._model.generate_content(prompt)
         return response.text.strip()
     

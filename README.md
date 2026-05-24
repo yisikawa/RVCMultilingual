@@ -1,54 +1,119 @@
-# RVC Multilingual Audio Generator
+﻿# RVC Multilingual Audio Generator
 
-このアプリケーションは、Geminiによる多言語翻訳・台本生成、Google Cloud TTSによる基本音声の合成、および RVC (Retrieval-based Voice Conversion) を使用した声質変換を1つの画面で行えるStreamlitウェブアプリケーションです。
+GeminiによるAI翻訳・台本生成、Google Cloud TTSによる音声合成、RVC (Retrieval-based Voice Conversion) による声質変換を1つのWebアプリで行えるシステムです。
+
+FastAPI（バックエンド）＋ Next.js（フロントエンド）構成で、PC・スマホ・タブレットなど複数デバイスから同時アクセスできます。
+
+## 📁 プロジェクト構成
+
+```
+RVCMultilingual/
+├── start.bat             # 起動スクリプト（Windows）
+├── .env                  # APIキー管理（要作成）
+│
+├── core/                 # ビジネスロジック層
+│   ├── config.py         # 設定管理
+│   ├── constants.py      # 定数（言語マップ等）
+│   ├── translator.py     # Gemini翻訳
+│   ├── tts_engine.py     # Google Cloud TTS
+│   ├── rvc_engine.py     # RVC変換
+│   ├── audio_utils.py    # 音声ユーティリティ
+│   └── pipeline.py       # パイプライン統合
+│
+├── backend/              # FastAPI バックエンド
+│   ├── main.py           # アプリエントリポイント（ポート8000）
+│   ├── job_manager.py    # 非同期ジョブ管理
+│   └── routes/           # APIルート
+│       ├── translate_tts.py  # POST /api/translate-tts
+│       ├── rvc.py            # POST /api/rvc
+│       ├── audio.py          # GET /api/audio/{filename}
+│       ├── status.py         # GET /api/status/{job_id}（SSE）
+│       └── models.py         # GET /api/models
+│
+├── frontend/             # Next.js フロントエンド（ポート3001）
+│   ├── app/page.tsx      # メイン画面
+│   ├── components/       # UIコンポーネント
+│   └── lib/api.ts        # APIクライアント
+│
+└── models/               # RVCモデルファイル（.pth / .index）
+```
+
+## ⚙️ 初期セットアップ
+
+### 1. Python依存パッケージのインストール
+
+```bash
+.\venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Node.js依存パッケージのインストール
+
+```bash
+cd frontend
+npm install
+```
+
+### 3. フロントエンドのビルド
+
+```bash
+cd frontend
+npm run build
+```
+
+### 4. APIキーの設定
+
+プロジェクトルートに `.env` ファイルを作成します。
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_APPLICATION_CREDENTIALS=path\to\your\gcp_service_account.json
+```
+
+---
 
 ## 🚀 起動手順
 
-1. **コマンドプロンプト（またはPowerShell）を開く**
-   起動したい対象のフォルダ（`d:\AntiGravity\RVCMultilingual`）をカレントディレクトリにします。
-   
-   ```bash
-   cd d:\AntiGravity\RVCMultilingual
-   ```
+`start.bat` をダブルクリック（またはコマンドプロンプトで実行）します。
 
-2. **仮想環境の有効化（必要な場合）**
-   Pythonの仮想環境（`venv`）を利用している場合は有効化します。
+バックエンド（ポート8000）とフロントエンド（ポート3001）の2つのウィンドウが起動します。
 
-   ```bash
-   .\venv\Scripts\activate
-   ```
+### アクセス先
 
-3. **アプリケーションの起動**
-   以下のコマンドを実行してStreamlitアプリを起動します。
+| デバイス | URL |
+|:---|:---|
+| 同一PC | http://localhost:3001 |
+| スマホ・タブレット（同一Wi-Fi） | http://＜PCのLAN IP＞:3001 |
 
-   ```bash
-   streamlit run app.py
-   ```
-   ※仮想環境から直接実行する場合は `.\venv\Scripts\streamlit run app.py` としても起動できます。
+> **PCのLAN IPを調べるには：** コマンドプロンプトで `ipconfig` を実行し、`IPv4 アドレス` を確認してください。
 
-4. **ブラウザで開く**
-   コマンドを実行すると、自動的に標準のWebブラウザが立ち上がり、アプリケーションの画面（通常は `http://localhost:8501` ）が表示されます。自動で開かない場合は、ターミナルに表示されているURLをブラウザに手動でコピー＆ペーストしてください。
+---
+
+## 🔄 コード変更後の反映手順
+
+フロントエンドのコードを変更した場合は、ビルドしてから再起動してください。
+
+```bash
+cd frontend
+npm run build
+```
+
+その後 `start.bat` を再実行します。
 
 ---
 
 ## 🛑 終了手順
 
-アプリケーション（サーバー）を終了するには、起動したコマンドプロンプト（ターミナル）画面で以下の操作を行います。
-
-1. コマンドプロンプトのウィンドウを選択してアクティブにします。
-2. キーボードの **`Ctrl` キー を押しながら `C` キー** を押します。（`Ctrl + C`）
-3. サーバーが安全にシャットダウンされ、通常のコマンド入力待機状態に戻ります。
-4. （仮想環境を有効化していた場合は、`deactivate` と入力してエンターを押すと仮想環境から抜けられます。）
-5. アプリケーションを開いていたブラウザのタブは、そのまま閉じて構いません。
+起動した2つのコマンドプロンプトウィンドウをそれぞれ閉じるか、各ウィンドウで `Ctrl + C` を押してください。
 
 ---
 
-## 💡 基本的な使い方
+## 💡 使い方
 
-1. 左サイドバーの設定画面（⚙️ Settings / 🎙️ RVC Settings）で必要なAPIキー（Gemini, GCP）や使用するRVCモデル名を入力し、設定を保存します。
-2. メイン画面の「1. Input Dialogue」で喋らせたい日本語のテキストとキャラクター設定を入力します。
-3. 「2. Target Settings」で翻訳して喋らせたいターゲット言語を選択します。
-4. 「**Generate Script & Base Audio**」ボタンを押すと、翻訳とGoogle TTSによるベース音声が生成されます。
-5. 「3. Results & Playback」にベース音声が表示されるので、再生してイントネーション等を確認します。
-6. 「**🚀 Run RVC Conversion**」ボタンを押すと、ローカルのRVCモデルを使用して声質が変換されます。
-7. 変換が完了したら「**💾 Save Converted Voice**」ボタンを押して、お使いの環境に音声ファイル（WAV形式）を保存します。保存する際のファイル名は自由に設定可能です。
+1. ブラウザで上記URLを開きます
+2. 左上の **☰ ボタン** を押してRVC Settings を開き、使用するモデル（.pth）とインデックスファイル（.index）を選択します
+3. **1. Input Dialogue** に日本語テキストとキャラクター設定を入力します
+4. **2. Target Settings** でターゲット言語を選択します
+5. **✨ Generate Base Audio** を押すと翻訳とTTS音声が生成されます
+6. **🚀 Run RVC Conversion** を押してRVC声質変換を実行します
+7. **💾 Save Converted Voice** で変換済み音声をダウンロードします

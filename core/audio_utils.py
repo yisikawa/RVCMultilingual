@@ -1,5 +1,7 @@
-import logging
+﻿import logging
+import torch
 import torchaudio
+import soundfile as sf
 from core.constants import DEFAULT_TARGET_SR
 
 logger = logging.getLogger(__name__)
@@ -7,18 +9,16 @@ logger = logging.getLogger(__name__)
 def resample_audio(file_path: str, target_sr: int = DEFAULT_TARGET_SR) -> None:
     """音声ファイルを指定サンプリングレートに変換する"""
     try:
-        waveform, sample_rate = torchaudio.load(file_path)
-        
+        # soundfileで直接読み込み（torchaudioのバックエンド問題を回避）
+        data, sample_rate = sf.read(file_path, always_2d=True)
+
         if sample_rate == target_sr:
-            logger.info(f"音声は既に {target_sr}Hz です。リサンプリング不要。")
             return
-        
-        logger.info(f"{sample_rate}Hz → {target_sr}Hz にリサンプリング中...")
+
+        waveform = torch.FloatTensor(data.T)
         resampler = torchaudio.transforms.Resample(orig_freq=sample_rate, new_freq=target_sr)
         waveform_resampled = resampler(waveform)
-        torchaudio.save(file_path, waveform_resampled, target_sr)
-        logger.info("リサンプリング完了。")
-        
+        sf.write(file_path, waveform_resampled.numpy().T, target_sr)
+
     except Exception as e:
-        logger.error(f"リサンプリングエラー: {e}")
-        raise
+        logger.warning(f"リサンプリングをスキップしました（変換済みファイルはそのまま使用）: {e}")

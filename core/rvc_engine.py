@@ -1,8 +1,7 @@
-import os
+﻿import os
 import logging
 import torch
 from contextlib import contextmanager
-from rvc_python.infer import RVCInference
 from core.audio_utils import resample_audio
 from core.constants import DEFAULT_PITCH, DEFAULT_F0_METHOD, DEFAULT_INDEX_RATE, DEFAULT_TARGET_SR
 
@@ -45,10 +44,9 @@ class RVCEngine:
         if not os.path.exists(input_path):
             raise FileNotFoundError(f"入力ファイルが見つかりません: {input_path}")
         
-        logger.info(f"RVC変換を実行します モデル: {model_path}")
-        
         with _patch_torch_load():
             try:
+                from rvc_python.infer import RVCInference
                 rvc = RVCInference(device=self._device)
                 rvc.load_model(model_path)
                 rvc.set_params(f0up_key=pitch, f0method=f0_method, index_rate=index_rate)
@@ -65,6 +63,4 @@ class RVCEngine:
         
         if target_sr:
             resample_audio(output_path, target_sr)
-        
-        logger.info("RVC変換完了。")
         return True

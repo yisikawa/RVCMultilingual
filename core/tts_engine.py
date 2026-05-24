@@ -1,4 +1,4 @@
-import os
+﻿import os
 import logging
 from google.cloud import texttospeech
 
@@ -17,7 +17,6 @@ class TTSEngine:
         
     def synthesize(self, text: str, language_code: str, voice_name: str | None = None, output_file: str = "output.mp3") -> bool:
         """テキストを音声に合成する"""
-        logger.info(f"TTS合成を実行中... (Language: {language_code}, Output: {output_file})")
         
         input_text = texttospeech.SynthesisInput(text=text)
         
@@ -39,7 +38,6 @@ class TTSEngine:
             
             with open(output_file, "wb") as out:
                 out.write(response.audio_content)
-                logger.info(f"音声ファイルを保存しました: {output_file}")
             return True
         except Exception as e:
             logger.error(f"TTS合成エラー: {e}")
