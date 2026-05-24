@@ -1,4 +1,4 @@
-# 対応言語マップ（表示名 → BCP-47コード）
+﻿# 対応言語マップ（表示名 → BCP-47コード）
 LANGUAGE_MAP: dict[str, str] = {
     "Japanese": "ja-JP",
     "Japanese (Hakata-ben)": "ja-JP",

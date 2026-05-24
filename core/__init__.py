@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 
 def setup_logging(level: int = logging.INFO) -> None:
     """アプリケーション全体のロギングを設定する"""

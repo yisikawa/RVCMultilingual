@@ -1,4 +1,4 @@
-import logging
+﻿import logging
 from core.config import AppConfig
 from core.translator import GeminiTranslator
 from core.tts_engine import TTSEngine
