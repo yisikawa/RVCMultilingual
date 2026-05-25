@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import SettingsPanel from "@/components/SettingsPanel";
 import ProgressBar from "@/components/ProgressBar";
 import { translateAndTTS, runRVC, watchJob, audioUrl, Job } from "@/lib/api";
+import * as recognition from "@/lib/recognition";
 
 const LANGUAGES: Record<string, string> = {
   Japanese: "ja-JP",
@@ -34,6 +35,49 @@ export default function Home() {
   const [translatedText, setTranslatedText] = useState("");
   const [ttsReady, setTtsReady] = useState(false);
   const [rvcReady, setRvcReady] = useState(false);
+
+  const [recording, setRecording] = useState(false);
+  const [interim, setInterim] = useState("");
+  const [micError, setMicError] = useState<string | null>(null);
+  const textRef = useRef("");
+  useEffect(() => { textRef.current = text; }, [text]);
+  useEffect(() => () => recognition.stop(), []);
+
+  const toggleRecording = useCallback(async () => {
+    if (recording) {
+      recognition.stop();
+      return;
+    }
+    setMicError(null);
+    const useMicMonitor = !recognition.isAndroid();
+    await recognition.start({
+      lang: "ja-JP",
+      captureAudio: useMicMonitor,
+      onInterim: (t) => setInterim(t),
+      onFinal: (t) => {
+        const base = textRef.current;
+        const next = base ? `${base} ${t}` : t;
+        textRef.current = next;
+        setText(next);
+        setInterim("");
+      },
+      onEnd: () => {
+        setRecording(false);
+        setInterim("");
+      },
+      onError: (err) => {
+        const messages: Record<string, string> = {
+          "no-speech": "音声が検知できませんでした。",
+          "network": "ネットワークエラー。音声認識にはインターネット接続が必要です。",
+          "not-allowed": "マイクへのアクセスが拒否されました。ブラウザの設定を確認してください。",
+          "audio-capture": "マイクが見つかりません。接続を確認してください。",
+          "service-not-allowed": "このブラウザでは音声認識を利用できません。iPhoneの場合はSafariをご利用ください。",
+        };
+        setMicError(messages[err] ?? `音声認識エラー: ${err}`);
+      },
+    });
+    setRecording(true);
+  }, [recording]);
 
   const handleGenerateAudio = useCallback(async () => {
     setTtsJob({ status: "running", progress: 5, message: "開始中...", result: null, error: null });
@@ -102,13 +146,33 @@ export default function Home() {
           <div className="space-y-6">
             <section>
               <h2 className="text-base font-semibold mb-3">1. Input Dialogue</h2>
-              <label className="block text-xs text-gray-500 mb-1">Japanese Text</label>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs text-gray-500">Japanese Text</label>
+                <button
+                  type="button"
+                  onClick={toggleRecording}
+                  className={`text-xs px-2 py-1 rounded border transition-colors ${
+                    recording
+                      ? "bg-red-500 text-white border-red-500 hover:bg-red-600"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  }`}
+                  aria-label={recording ? "音声入力を停止" : "音声入力を開始"}
+                >
+                  🎤 {recording ? "停止" : "音声入力"}
+                </button>
+              </div>
               <textarea
                 className="w-full border rounded p-2 h-28 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-gray-400"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder="こんにちは、皆さんお元気ですか？"
               />
+              {interim && (
+                <p className="text-xs text-gray-400 mt-1 italic">…{interim}</p>
+              )}
+              {micError && (
+                <p className="text-xs text-red-500 mt-1">{micError}</p>
+              )}
               <label className="block text-xs text-gray-500 mt-3 mb-1">Character Personality / Setting</label>
               <input
                 className="w-full border rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
