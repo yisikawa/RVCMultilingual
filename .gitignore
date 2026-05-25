@@ -16,6 +16,9 @@ __pycache__/
 config.json
 *.log
 
+# Claude Code
+.claude/
+
 # Audio files (Input/Output)
 *.wav
 *.mp3
